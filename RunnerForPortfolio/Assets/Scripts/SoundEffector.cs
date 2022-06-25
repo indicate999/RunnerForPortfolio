@@ -4,8 +4,13 @@ using UnityEngine;
 
 public class SoundEffector : MonoBehaviour
 {
-    public AudioSource audioSource;
-    public AudioClip ringSound, spikeSound;
+    private AudioSource audioSource;
+    [SerializeField] private AudioClip ringSound, spikeSound;
+
+    private void Awake()
+    {
+        audioSource = GetComponent<AudioSource>();
+    }
 
     public void PlayRingSound()
     {

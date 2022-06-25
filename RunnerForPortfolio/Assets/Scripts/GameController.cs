@@ -1,71 +1,126 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 
 public class GameController : MonoBehaviour
 {
     [Header("Prefabs")]
-    public GameObject Ring;
-    public GameObject Spike;
-    public GameObject MovableSpike;
+    [SerializeField] private GameObject Ground;
+    [SerializeField] private GameObject Ring;
+    [SerializeField] private GameObject Spike;
+    [SerializeField] private GameObject MovableSpike;
 
     [Header("General settings")]
-    public float startZ;
-    public float distance;
-    public int iterationCycleNum;
+    [SerializeField] private float iterationZDistance;
+    [SerializeField] private int iterationCycleOfCreationNum;
+    [SerializeField] private float startEnvironmentZPosition;
+    private float environmentZposition;
+    [SerializeField] private float environmentDistance;
+    private float groundZsize;
+    private float groundZposition = 0;
 
     [Header("Rings settings")]
-    public float ringDistance;
-    public float leftRingX;
-    public float middleRingX;
-    public float rightRingX;
+    [SerializeField] private float ringDistance;
+    [SerializeField] private float leftRingX;
+    [SerializeField] private float middleRingX;
+    [SerializeField] private float rightRingX;
+    [SerializeField] private float ringY;
 
     [Header("Spikes settings")]
-    public float spikeDistance;
-    public float leftSpikeX;
-    public float middleSpikeX;
-    public float rightSpikeX;
-    public float movableSpikeDistance;
+    [SerializeField] private float spikeDistance;
+    [SerializeField] private float leftSpikeX;
+    [SerializeField] private float middleSpikeX;
+    [SerializeField] private float rightSpikeX;
+    [SerializeField] private float movableSpikeDistance;
+    [SerializeField] private float spikeY;
 
     [Header("Amount of elements")]
-    public int OneRingColumnAmount;
-    public int RingColumnsAmount;
-    public int CurvedRingColumnAmount;
-    public int SpikeGroupAmount;
-    public int MovableSpikeAmount;
+    [SerializeField] private int OneRingColumnAmount;
+    [SerializeField] private int RingColumnsAmount;
+    [SerializeField] private int CurvedRingColumnAmount;
+    [SerializeField] private int SpikeGroupAmount;
+    [SerializeField] private int MovableSpikeAmount;
 
-    // Start is called before the first frame update
+    private Transform playerTransform;
+
+    private void Awake()
+    {
+        playerTransform = GameObject.FindGameObjectWithTag("Player").GetComponent<Transform>();
+
+        //Here you get the length of the earth block along the z axis
+        groundZsize = Ground.transform.GetChild(0).GetComponent<Renderer>().bounds.size.z;
+         
+    }
+
     void Start()
     {
-        float posZ = startZ;
+        environmentZposition = startEnvironmentZPosition;
+    }
 
-        for (int i = 0; i < iterationCycleNum; i++)
+    private void Update()
+    {
+        //With this code, all elements of the environment, including the ground, rings and spikes,
+        //are generated during the passage of the game, creating an endless level.
+        //If the character is at a distance (iterationZDistance) from the end of the generated environment,
+        //then a new generation of the environment occurs
+        if (playerTransform.position.z + iterationZDistance > environmentZposition)
         {
-            int randomRingType = Random.Range(0, 3);
+            //(iterationCycleOfCreationNum) shows how many times the environment creation cycle will occur during each environment generation
+            for (int i = 0; i < iterationCycleOfCreationNum; i++)
+            {
+                //Here, the method of building the environment is randomly selected.
+                int randomRingType = Random.Range(0, 3);
 
-            if (randomRingType == 0)
-                AddOneRingColumn(OneRingColumnAmount, ref posZ);
-            else if (randomRingType == 1)
-                AddRingColumns(RingColumnsAmount, ref posZ);
-            else
-                AddCurvedRingColumn(CurvedRingColumnAmount, ref posZ);
+                //The variable is sent to the method with the ref modifier so that when the environment generation methods are called in the future,
+                //a new environment will be created at following positions
+                if (randomRingType == 0)
+                    AddOneRingColumn(OneRingColumnAmount, ref environmentZposition);
+                else if (randomRingType == 1)
+                    AddRingColumns(RingColumnsAmount, ref environmentZposition);
+                else
+                    AddCurvedRingColumn(CurvedRingColumnAmount, ref environmentZposition);
 
-            posZ += distance;
+                //There must be a distance between the groups of the environment
+                environmentZposition += environmentDistance;
 
-            int randomSpikeType = Random.Range(0, 2);
+                int randomSpikeType = Random.Range(0, 2);
 
-            if (randomSpikeType == 0)
-                AddSpikeGroup(SpikeGroupAmount, ref posZ);
-            else
-                AddMovableSpikeGroup(MovableSpikeAmount, ref posZ);
+                if (randomSpikeType == 0)
+                    AddSpikeGroup(SpikeGroupAmount, ref environmentZposition);
+                else
+                    AddMovableSpikeGroup(MovableSpikeAmount, ref environmentZposition);
 
-            posZ += distance;
+                environmentZposition += environmentDistance;
+            }
 
+            //The ground is generated to about the same place as the rings and spikes
+            while (groundZposition < environmentZposition)
+            {
+                Instantiate(Ground, new Vector3(0, 0, groundZposition), Quaternion.identity);
+
+                groundZposition += groundZsize;
+            }
         }
     }
 
-    private void AddSpikeGroup(int spikeNum, ref float z)
+    //These methods create one environment element of the environment
+    private void CreateRing(float x, float posZ)
+    {
+        Instantiate(Ring, new Vector3(x, ringY, posZ), Quaternion.identity);
+    }
+
+    private void CreateSpike(float x, float posZ)
+    {
+        Instantiate(Spike, new Vector3(x, spikeY, posZ), Quaternion.identity);
+    }
+
+    private void CreateMovableSpike(float posZ)
+    {
+        Instantiate(MovableSpike, new Vector3(0, spikeY, posZ), Quaternion.identity);
+    }
+
+    //This method creates a group of spikes, each of which spawns random at one of three locations
+    private void AddSpikeGroup(int spikeNum, ref float posZ)
     {
         float[] randomArray = new float[] { leftSpikeX, middleSpikeX, rightSpikeX };
         float lastRandomX = -100;
@@ -74,55 +129,64 @@ public class GameController : MonoBehaviour
         {
             float randomX = randomArray[Random.Range(0, randomArray.Length)];
 
+            //If the randomly selected next location repeats the previous one,
+            //then the random choice of the spike location will be repeated until there are no repetitions
             while (randomX == lastRandomX)
             {
                 randomX = randomArray[Random.Range(0, randomArray.Length)];
             }
 
-            CreateSpike(randomX, z);
+            CreateSpike(randomX, posZ);
             lastRandomX = randomX;
-            z += spikeDistance;
+            posZ += spikeDistance;
         }
 
     }
 
-    private void AddMovableSpikeGroup(int movableSpikeNum, ref float z)
+    //This method creates a group of moving spikes
+    private void AddMovableSpikeGroup(int movableSpikeNum, ref float posZ)
     {
         for (int i = 0; i < movableSpikeNum; i++)
         {
-            CreateMovableSpike(z);
-            z += movableSpikeDistance;
+            CreateMovableSpike(posZ);
+            posZ += movableSpikeDistance;
         }
     }
 
-    private void AddOneRingColumn(int ringsNum, ref float z)
+    //This method creates a column of rings in one of three random directions
+    private void AddOneRingColumn(int ringsNum, ref float posZ)
     {
         float[] randomArray = new float[] { leftRingX, middleRingX, rightRingX };
         float randomDirection = randomArray[Random.Range(0, randomArray.Length)];
 
         for (int i = 0; i < ringsNum; i++)
         {
-            CreateRing(randomDirection, z);
-            z += ringDistance;
+            CreateRing(randomDirection, posZ);
+            posZ += ringDistance;
         }
     }
 
-    private void AddRingColumns(int ringsNum, ref float z)
+    //This method creates columns of rings in all three directions.
+    private void AddRingColumns(int ringsNum, ref float posZ)
     {
         for (int i = 0; i < ringsNum; i++)
         {
-            CreateRing(leftRingX, z);
-            CreateRing(middleRingX, z);
-            CreateRing(rightRingX, z);
-            z += ringDistance;
+            CreateRing(leftRingX, posZ);
+            CreateRing(middleRingX, posZ);
+            CreateRing(rightRingX, posZ);
+            posZ += ringDistance;
         }
     }
 
-    private void AddCurvedRingColumn(int ringsNum, ref float z)
+    //This method creates a curved line of rings from right to left or left to right.
+    private void AddCurvedRingColumn(int ringsNum, ref float posZ)
     {
+        //By summing the modules of positions along the x-axis of the left and right extreme points, we get the distance between them
         float distanceX = Mathf.Abs(leftRingX) + Mathf.Abs(rightRingX);
         int randomDirection = Random.Range(0, 2);
         float posX;
+
+        //Here it is randomly chosen whether the rings will go from left to right or from right to left
         if (randomDirection == 0)
             posX = leftRingX;
         else
@@ -130,34 +194,14 @@ public class GameController : MonoBehaviour
         
         for (int i = 0; i < ringsNum; i++)
         {
-            CreateRing(posX, z);
+            CreateRing(posX, posZ);
+            //With these calculations, we evenly distribute the rings along the x-axis
             if (randomDirection == 0)
                 posX += distanceX / ringsNum;
             else
                 posX -= distanceX / ringsNum;
 
-            z += ringDistance;
+            posZ += ringDistance;
         }
-    }
-
-    private void CreateRing(float x, float z)
-    {
-        Instantiate(Ring, new Vector3(x, 2.9f, z), Quaternion.identity);
-    }
-
-    private void CreateSpike(float x, float z)
-    {
-        Instantiate(Spike, new Vector3(x, 3.67f, z), Quaternion.identity);
-    }
-
-    private void CreateMovableSpike(float z)
-    {
-        Instantiate(MovableSpike, new Vector3(0, 3.67f, z), Quaternion.identity);
-    }
-
-    public void Restart()
-    {
-        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
-        Time.timeScale = 1;
     }
 }
