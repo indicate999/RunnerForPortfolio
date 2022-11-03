@@ -4,21 +4,21 @@ using UnityEngine;
 
 public class SoundEffector : MonoBehaviour
 {
-    private AudioSource audioSource;
-    [SerializeField] private AudioClip ringSound, spikeSound;
+    private AudioSource _audioSource;
+    [SerializeField] private AudioClip _ringSound, _spikeSound;
 
     private void Awake()
     {
-        audioSource = GetComponent<AudioSource>();
+        _audioSource = GetComponent<AudioSource>();
     }
 
     public void PlayRingSound()
     {
-        audioSource.PlayOneShot(ringSound);
+        _audioSource.PlayOneShot(_ringSound);
     }
 
     public void PlaySpikeSound()
     {
-        audioSource.PlayOneShot(spikeSound);
+        _audioSource.PlayOneShot(_spikeSound);
     }
 }

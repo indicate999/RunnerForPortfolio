@@ -136,9 +136,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: eb6921d282f4da44d9cb2ea4b6d25819, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  LeftPointPosition: {fileID: 5692397208697135843}
-  RightPointPosition: {fileID: 5692397208771348955}
-  speed: 10
+  _leftPointPosition: {fileID: 5692397208697135843}
+  _rightPointPosition: {fileID: 5692397208771348955}
+  _speed: 10
 --- !u!1 &5692397209424041551
 GameObject:
   m_ObjectHideFlags: 0
