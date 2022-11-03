@@ -12,9 +12,16 @@ public class EnvironmentHiding : MonoBehaviour
         playerTransform = GameObject.FindGameObjectWithTag("Player").GetComponent<Transform>();
     }
 
-    void Update()
+    private void Update()
     {
-        if (playerTransform.position.z > transform.position.z + hideDistance)
+        HideEnvironmentObject();
+    }
+
+    private void HideEnvironmentObject()
+    {
+        bool isPlayerFarEnoughAway = playerTransform.position.z > transform.position.z + hideDistance;
+
+        if (isPlayerFarEnoughAway)
             gameObject.SetActive(false);
     }
 }

@@ -8,8 +8,9 @@ public class UI : MonoBehaviour
     [SerializeField] private GameObject _startPanel;
     [SerializeField] private GameObject _restartPanel;
 
-    private int _scoreCount = 0;
     [SerializeField] private Text _scoreCountText;
+
+    private int _scoreCount = 0;
 
     public void HideStartPanel()
     {

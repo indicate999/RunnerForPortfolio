@@ -2,15 +2,17 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+[RequireComponent(typeof(Animator), typeof(Rigidbody))]
 public class PlayerControl : MonoBehaviour
 {
-    private Animator _animator;
-    private Rigidbody _rb;
     [SerializeField] private UI _ui;
     [SerializeField] private SceneLoader _sceneLoader;
     [SerializeField] private SoundEffector _soundEffector;
 
     [SerializeField] private SpeedSettingsData _speedSettings;
+
+    private Animator _animator;
+    private Rigidbody _rb;
 
     private bool isKeyControl = false;
 
